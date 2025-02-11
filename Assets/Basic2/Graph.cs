@@ -2,30 +2,35 @@ using UnityEngine;
 
 public class Graph : MonoBehaviour
 {
-    private void Awake()
+    void Awake()
     {
         float step = 2f / resolution;
-        Vector3 position = Vector3.zero;
         var scale = Vector3.one * step;
-        mPoints = new Transform[resolution];
-        for(int i = 0; i < mPoints.Length; ++i)
+        mPoints = new Transform[resolution * resolution];
+        for (int i = 0; i < mPoints.Length; i++)
         {
             Transform point = mPoints[i] = Instantiate(mPointPrefab);
-            point.SetParent(transform, false);
-            position.x = (i + 0.5f) * step - 1f;
-            point.localPosition = position;
             point.localScale = scale;
+            point.SetParent(transform, false);
         }
     }
 
-    private void Update()
+    void Update()
     {
-        var time = Time.time;
-        for (int i = 0; i < mPoints.Length; i++) {
-            Transform point = mPoints[i];
-            Vector3 position = point.localPosition;
-            position.y = Mathf.Sin(Mathf.PI * (position.x + time));
-            point.localPosition = position;
+        FunctionLibrary.Function f = FunctionLibrary.GetFunction(function);
+        float time = Time.time;
+        float step = 2f / resolution;
+        float v = 0.5f * step - 1f;
+        for (int i = 0, x = 0, z = 0; i < mPoints.Length; i++, x++)
+        {
+            if (x == resolution)
+            {
+                x = 0;
+                z += 1;
+                v = (z + 0.5f) * step - 1f;
+            }
+            float u = (x + 0.5f) * step - 1f;
+            mPoints[i].localPosition = f(u, v, time);
         }
     }
 
@@ -33,6 +38,8 @@ public class Graph : MonoBehaviour
     private Transform mPointPrefab;
     [SerializeField, Range(10, 100)]
     private int resolution = 10;
+    [SerializeField]
+    FunctionLibrary.FunctionName function;
 
     Transform[] mPoints;
 }
